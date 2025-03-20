@@ -19,16 +19,12 @@
 <a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/arXiv-2403.14613-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;
 <a href='https://github.com/liuff19/Video-T1'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp;&nbsp;
 
+![Teaser Visualization](assets/teaser.png)
 
+</div>
 
-
-![Pipeline Visualization](assets/pipeline.png)
-
-
-
-
-
-This is the official repository of Video-T1, a **Test-Time Scaling** Framework for Video Generation.  
+Video-T1: We present the generative effects and performance improvements of video generation under test-time scaling (TTS)
+settings. The videos generated with TTS are of higher quality and more consistent with the prompt than those generated without TTS.
 
 </div>
 
@@ -36,9 +32,19 @@ This is the official repository of Video-T1, a **Test-Time Scaling** Framework f
 
 - `2025.3.13` 🤗🤗🤗 We release *Video-T1: Test-time Scaling for Video Generation*
 
-## Results
+## Pipeline
 
-![Pipeline Visualization](assets/teaser.png)
+![Pipeline Visualization](assets/pipeline.png)
+
+</div>
+
+Pipeline of Tes-Time Scaling for Video Generation. Top: Random Linear Search for TTS video generation is to randomly
+sample Gaussian noises, prompt the video generator to generate sequential of video clips through step-by-step denoising in a linear manner,
+and select the highest score form the test verifiers. Bottom: Tree of Frames (ToF) Search for TTS video generation is to divide the video
+generation process into three stages: (a) the first stage performs image-level alignment that influences the later frames; (b) the second stage
+is to apply dynamic prompt in test verifiers V to focus on motion stability, physical plausibility to provide feedback that guides heuristic
+searching process; (c) the last stage assesses the overall quality of the video and select the video with highest alignment with text prompts.
+
 
 
 ## Installation
