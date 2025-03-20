@@ -1,60 +1,35 @@
 <div align="center">
 
-# ✨Video-T1: Test-time Scaling for Video Generation✨
+# ✨Video-T1✨
 
-<p align="center">
-    <a href="https://liuff19.github.io/">Fangfu Liu</a><sup>1*</sup>,
-    <a href="https://hanyang-21.github.io/">Hanyang Wang</a><sup>1*</sup>,
-    <a href="">Yimo Cai</a><sup>1</sup>,
-    <a href="https://iseesaw.github.io/">Kaiyan Zhang</a><sup>1</sup>,
-    <a href="https://xiaohangzhan.github.io/">Xiaohang Zhan</a><sup>2</sup>,
-    <a href="https://duanyueqi.github.io/">Yueqi Duan</a><sup>1</sup>,
-    <br>
-    <sup>*</sup>Equal Contribution.
-    <br>
-    <sup>1</sup>Tsinghua University,
-    <sup>2</sup>Tencent AI Lab,
-</p>
+[[Paper]](paper_html)
+[[Project Page]](https://liuff19.github.io/Video-T1/)
 
-<a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/arXiv-2403.14613-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;
-<a href='https://github.com/liuff19/Video-T1'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp;&nbsp;
 
-![Teaser Visualization](assets/teaser.png)
 
-</div>
+![Pipeline Visualization](assets/Pipeline.png)
 
-Video-T1: We present the generative effects and performance improvements of video generation under test-time scaling (TTS)
-settings. The videos generated with TTS are of higher quality and more consistent with the prompt than those generated without TTS.
+
+/Visualization Results
+<table class="center" border="0" style="width: 100%; text-align: left;">
+<tr>
+  <th>Without TTS</th>
+  <th>With TTS</th>
+</tr>
+<tr>
+  <td><video src="assets/A_steam_train_moving_on_a_mountainside.mp4"></video></td>
+  <td><video src="assets/A_steam_train_moving_on_a_mountainside_TTS.mp4"></video></td>
+</tr>
+</table>
+
+
+This is the official repository of Video-T1, a **Test-Time Scaling** Framework for Video Generation.  
 
 </div>
 
 ## News
 
 - `2025.3.13` 🤗🤗🤗 We release *Video-T1: Test-time Scaling for Video Generation*
-
-## Results
-
-![Results Visualization](assets/results-teaser.png)
-
-</div>
-
-Results of Test-Time Scaling for Video Generation. As the number of samples in the search space increases by scaling test-time
-computation (TTS), the models’ performance exhibits consistent improvement.
-
-
-## Pipeline
-
-![Pipeline Visualization](assets/pipeline.png)
-
-</div>
-
-Pipeline of Tes-Time Scaling for Video Generation. Top: Random Linear Search for TTS video generation is to randomly
-sample Gaussian noises, prompt the video generator to generate sequential of video clips through step-by-step denoising in a linear manner,
-and select the highest score form the test verifiers. Bottom: Tree of Frames (ToF) Search for TTS video generation is to divide the video
-generation process into three stages: (a) the first stage performs image-level alignment that influences the later frames; (b) the second stage
-is to apply dynamic prompt in test verifiers V to focus on motion stability, physical plausibility to provide feedback that guides heuristic
-searching process; (c) the last stage assesses the overall quality of the video and select the video with highest alignment with text prompts.
-
 
 
 ## Installation
@@ -168,7 +143,7 @@ We would release Dataset for Test-Time Scaling in CogVideoX-5B
 
 ## Acknowledgement
 
-We are thankful for the following great works when implementing Video-T1 and Yixin's great figure design:
+We are thankful for the following great works when implementing Video-T1:
 
 [Pyramid-Flow](https://github.com/jy0205/Pyramid-Flow)  
 [NOVA](https://github.com/baaivision/NOVA)  

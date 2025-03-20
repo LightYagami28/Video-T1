@@ -1,0 +1,5 @@
+Does the camera movement have no obvious flaws?
+Is the object's movement completely realistic?
+Is the smoothness of the object's movement very good?
+Is the shape of the object not chaotic throughout the video?
+Is the shape of the object perfectly maintained throughout the video?

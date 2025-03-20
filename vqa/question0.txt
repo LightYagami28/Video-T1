@@ -1,0 +1,6 @@
+Is the video content part of the physical world?
+Does it fully comply with the laws of physics?
+Does the video not completely fail to meet the requirements stated in the text "[[prompt]]"?
+Is the camera very stable?
+Are the colors not significantly unattractive?
+Is the shape of the object at the beginning not chaotic?
