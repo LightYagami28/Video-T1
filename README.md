@@ -74,7 +74,7 @@ git clone https://github.com/LLaVA-VL/LLaVA-NeXT && cd LLaVA-NeXT && pip install
 You need to download the following models:
  - **Pyramid-Flow** model checkpoint (for video generation)
  - **VisionReward-Video** model checkpoint (for video reward guidance)
- - (Optional)**Image-CoT-Generation** model checkpoint (for ImageCoT)
+ - (Optional) **Image-CoT-Generation** model checkpoint (for ImageCoT)
  - (Optional) **DeepSeek-R1-Distill-Llama-8B (Or other LLMs)** model checkpoint (for hierarchical prompts)
 
 ## 💻 Inference
