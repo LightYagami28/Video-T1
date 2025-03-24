@@ -54,14 +54,14 @@ def parse_args():
     parser.add_argument(
         "--img_branch",
         type=str,
-        default="1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+        default="5,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1",
         help="Comma-separated number of image branches at each level of the model. "
              "Example: '5,1,2'. Defines the image generation structure."
     )
     parser.add_argument(
         "--video_branch",
         type=str,
-        default="1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+        default="5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
         help="Comma-separated number of video branches at each level of the model. "
              "Example: '3,2,2'. Defines the video generation structure."
     )
