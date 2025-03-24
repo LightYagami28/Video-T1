@@ -30,7 +30,7 @@ settings. The videos generated with TTS are of higher quality and more consisten
 
 ## News
 
-- `2025.3.13` 🤗🤗🤗 We release *Video-T1: Test-time Scaling for Video Generation*
+- `2025.3.24` 🤗🤗🤗 We release *Video-T1: Test-time Scaling for Video Generation*
 
 ## Results
 
