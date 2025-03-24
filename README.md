@@ -145,7 +145,7 @@ Example: Load **Reward Model** in GPU0, **Pyramid-Flow** in GPU1 and **Image-CoT
 
 ```bash
 # Load Models in different GPUs
-python videot1_multigpu.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name cityscape_video --reward_device_id 0 --base_device_id 1 --imgcot_device_id 2 --lm_device_id 3
+python videot1_multigpu.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name cat_lifeguard --reward_device_id 0 --base_device_id 1 --imgcot_device_id 2 --lm_device_id 3
 ```
 
 Please refer to videot1_multigpu.py for multi-GPU inference.
