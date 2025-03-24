@@ -294,7 +294,7 @@ class VideoT1Generator:
         self.image_path = image_path
         self.video_path = video_path
         self.result_path = result_path
-        self.LM_path = lm_path
+        self.lm_path = lm_path
         
         if not imgcot_device:
             self.imgcot_device = self.device
@@ -635,7 +635,7 @@ class VideoT1Generator:
 
         # --- Hierarchical Prompt Preparation ---
         if use_hierarchical_prompts:
-            prompt_list = hierarchical_prompts(prompt, device, self.LM_PATH) # Split prompt into hierarchical prompts
+            prompt_list = hierarchical_prompts(prompt, device, self.lm_path) # Split prompt into hierarchical prompts
             print(f"Hierarchical prompts: {prompt_list}") # Log the hierarchical prompts
             judging_prompt = prompt_list[0] # Start with the first prompt in the hierarchy
         else:
