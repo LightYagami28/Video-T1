@@ -41,14 +41,14 @@ def parse_args():
     # --- Essential Arguments ---
     parser.add_argument(
         "--prompt",
-        default="A beautiful coastal beach in spring, waves lapping on sand by Hokusai, in the style of Ukiyo",
+        default="A cat wearing sunglasses and working as a lifeguard at a pool.",
         type=str,
         help="Text prompt for video generation. "
              "This prompt guides the content of the generated video."
     )
     parser.add_argument(
         "--video_name",
-        default="old_space_man",
+        default=None,
         type=str,
         help="Name of the video file (without extension) for saving the generated video."
     )
@@ -57,14 +57,14 @@ def parse_args():
     parser.add_argument(
         "--img_branch",
         type=str,
-        default="5,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+        default="5,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1",
         help="Comma-separated number of image branches at each level of the model. "
              "Example: '5,1,2'. Defines the image generation structure."
     )
     parser.add_argument(
         "--video_branch",
         type=str,
-        default="8,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
+        default="5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
         help="Comma-separated number of video branches at each level of the model. "
              "Example: '3,2,2'. Defines the video generation structure."
     )
@@ -105,7 +105,7 @@ def parse_args():
     parser.add_argument(
         "--variant",
         type=str,
-        default="768",
+        default="384",
         choices=["384", "768"],
         help="Resolution variant for generated videos. "
              "'384' for lower resolution (640x384), '768' for higher resolution (1280x768). Default is '384'."
@@ -234,7 +234,11 @@ def main():
     # --- Checkpoints Path and Prompt Configuration ---
     prompt = args.prompt
     result_path = args.result_path
+    
     video_name = args.video_name
+    if not video_name:
+        video_name = prompt.replace(' ', '_')
+
     intermed_path = args.intermed_path
     model_path = args.model_path 
     vr_path = args.vr_path       
