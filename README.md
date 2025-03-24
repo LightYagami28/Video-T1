@@ -48,7 +48,7 @@ computation (TTS), the models’ performance exhibits consistent improvement.
 
 </div>
 
-Pipeline of Tes-Time Scaling for Video Generation. Top: Random Linear Search for TTS video generation is to randomly
+Pipeline of Test-Time Scaling for Video Generation. Top: Random Linear Search for TTS video generation is to randomly
 sample Gaussian noises, prompt the video generator to generate sequential of video clips through step-by-step denoising in a linear manner,
 and select the highest score form the test verifiers. Bottom: Tree of Frames (ToF) Search for TTS video generation is to divide the video
 generation process into three stages: (a) the first stage performs image-level alignment that influences the later frames; (b) the second stage
