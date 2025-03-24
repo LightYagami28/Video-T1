@@ -176,7 +176,7 @@ We are thankful for the following great works when implementing Video-T1 and Yix
 [VideoLLaMA3](https://github.com/DAMO-NLP-SG/VideoLLaMA3)  
 [CogVideoX](https://github.com/THUDM/CogVideo)  
 [OpenSora](https://github.com/hpcaitech/Open-Sora)  
-
+[Image-Generation-CoT](https://github.com/ZiyuGuo99/Image-Generation-CoT)
 
 ## 📚 Citation
 ```bibtex
