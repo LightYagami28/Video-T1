@@ -1134,25 +1134,7 @@ class VideoT1Generator:
                 True,
             )
 
-            ## Generate initial frame unit for the current branch (Chain-of-Thought start)
-            #intermediate_latents = self.generate_one_unit_img_cot(
-            #    0, 
-            #    noisy_latent[:,:,:1], # First frame of the noisy latent as input
-            #    past_condition_latents,
-            #    generation_prompt,
-            #    prompt_embeds,
-            #    prompt_attention_mask,
-            #    pooled_prompt_embeds,
-            #    num_inference_steps,
-            #    video_num_inference_steps,
-            #    current_height,
-            #    current_width,
-            #    1, # Unit length of 1 frame for initial image
-            #    device,
-            #    self.dtype,
-            #    branch_generator,
-            #    image_branching_factors, # Using image branching factors at depth 0
-            #)
+
 
             latent_dict[str(i)] = intermediate_latents[-1] # Store the final latent of the initial frame
             encoding_queue.put(str(i)) # Add initial encoding (depth 0) to the queue
@@ -1281,24 +1263,7 @@ class VideoT1Generator:
                         False,
                     )
 
-                    # Generate a new unit (frame_per_unit frames) for the current branch
-                    #intermediate_latents = self.generate_one_unit_img_cot(
-                    #    current_depth, 
-                    #    noisy_latents[int(current_encoding_prefix[:1])][:, :, 1 + (current_depth - 1) * self.frame_per_unit:1 + current_depth * self.frame_per_unit], # Noisy latent for current unit
-                    #    clean_latents_list, 
-                    #    generation_prompt,
-                    #    prompt_embeds,
-                    #    prompt_attention_mask,
-                    #    pooled_prompt_embeds,
-                    #    video_num_inference_steps,
-                    #    current_height,
-                    #    current_width,
-                    #    1, 
-                    #    device,
-                    #    self.dtype,
-                    #    branch_generator,
-                    #    image_branching_factors, # Using image branching factors at intermediate depths
-                    #)
+
 
                     history_latent_list.append(intermediate_latents[-1]) # Append generated latent to history
                     combined_latents = torch.cat(history_latent_list, dim=2) # Combine history and current latents
