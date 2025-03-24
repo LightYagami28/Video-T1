@@ -842,7 +842,7 @@ class VideoT1Generator:
                             history_latent_list.append(latent_dict[partial_encoding]) # Retrieve history latents
 
                     current_encoding = current_encoding_prefix + str(i) # Create new encoding by extending prefix
-                    print(f"Current Encoding: {current_encoding}, seed: {int(seeds[i])}") # Debug log - current encoding and seed
+                    # print(f"Current Encoding: {current_encoding}, seed: {int(seeds[i])}") # Debug log - current encoding and seed
                     branch_generator = torch.Generator(device=self.device).manual_seed(int(seeds[i])) # Create generator for new branch
 
                     # Get pyramid latents from history
@@ -1228,7 +1228,7 @@ class VideoT1Generator:
                             history_latent_list.append(latent_dict[partial_encoding]) # Retrieve history latents
 
                     current_encoding = current_encoding_prefix + str(i) # Create new encoding by extending prefix
-                    print(f"Current Encoding: {current_encoding}, seed: {int(seeds[i])}") # Debug log - current encoding and seed
+                    #print(f"Current Encoding: {current_encoding}, seed: {int(seeds[i])}") # Debug log - current encoding and seed
                     branch_generator = torch.Generator(device=self.device).manual_seed(int(seeds[i])) # Create generator for new branch
 
                     past_condition_latents = []
