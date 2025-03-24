@@ -28,11 +28,11 @@ settings. The videos generated with TTS are of higher quality and more consisten
 
 </div>
 
-## News
+## 📢 News
 
 - `2025.3.24` 🤗🤗🤗 We release *Video-T1: Test-time Scaling for Video Generation*
 
-## Results
+## 🎉 Results
 
 ![Results Visualization](assets/results-teaser.png)
 
@@ -42,7 +42,7 @@ Results of Test-Time Scaling for Video Generation. As the number of samples in t
 computation (TTS), the models’ performance exhibits consistent improvement.
 
 
-## Pipeline
+## 🌟 Pipeline
 
 ![Pipeline Visualization](assets/pipeline.png)
 
@@ -162,7 +162,7 @@ Please refer to videot1_multigpu.py for multi-GPU inference.
 *Namely, if img_branch is array* $A[]$, *video_branch is array* $B[]$, *then at depth* $i$, *we would have* $A[i] \times B[i]$ *initial images for each branch, and* $B[i]$ *next latent frames would be the children for each branch.*
 
 
-## TODO
+## 🚀 TODO
 
 We would release Dataset for Test-Time Scaling in CogVideoX-5B
 
