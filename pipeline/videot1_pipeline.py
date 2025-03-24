@@ -267,6 +267,8 @@ class VideoT1Generator:
         do_classifier_free_guidance: bool = True,
         dtype: torch.dtype = torch.float32,
         sequential_offload_enabled: bool = False,
+        use_img_cot:bool = True,
+        # modify the path
         image_selector_path = '/mnt/public/huggingface/Image-Generation-CoT/parm',
         image_path: str = "./intermed_files/images",
         video_path: str = "./intermed_files/videos",
@@ -274,7 +276,7 @@ class VideoT1Generator:
         result_path: str = "./final_results",
         imgcot_device: str = None,
         vr_device: str = None,
-        lm_device: str = None,
+        lm_device: str = "cuda",
     ):
         """Initialize the Video Chain-of-Thought Generator."""
         self.base_model = base_model
@@ -295,6 +297,7 @@ class VideoT1Generator:
         self.video_path = video_path
         self.result_path = result_path
         self.lm_path = lm_path
+        self.lm_device = lm_device
         
         if not imgcot_device:
             self.imgcot_device = self.device
@@ -306,12 +309,13 @@ class VideoT1Generator:
         else:
             self.vr_device = vr_device
 
-        # Initialize selector with correct parameters
-        self.selector = ImageSelector(
-            device=self.imgcot_device, 
-            device_map={"": self.imgcot_device}, 
-            pretrained=image_selector_path
-        )
+        if use_img_cot:
+            # Initialize selector with correct parameters
+            self.selector = ImageSelector(
+                device=self.imgcot_device, 
+                device_map={"": self.imgcot_device}, 
+                pretrained=image_selector_path
+            )
 
 
 
@@ -635,7 +639,7 @@ class VideoT1Generator:
 
         # --- Hierarchical Prompt Preparation ---
         if use_hierarchical_prompts:
-            prompt_list = hierarchical_prompts(prompt, device, self.lm_path) # Split prompt into hierarchical prompts
+            prompt_list = hierarchical_prompts(prompt, self.lm_device, self.lm_path) # Split prompt into hierarchical prompts
             print(f"Hierarchical prompts: {prompt_list}") # Log the hierarchical prompts
             judging_prompt = prompt_list[0] # Start with the first prompt in the hierarchy
         else:
@@ -684,10 +688,16 @@ class VideoT1Generator:
                 prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
                 pooled_prompt_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
                 prompt_attention_mask = torch.cat([negative_prompt_attention_mask, prompt_attention_mask], dim=0)
+        else:
+            prompt_embeds, prompt_attention_mask, pooled_prompt_embeds = self.base_model.text_encoder(generation_prompt, device)
+            negative_prompt_embeds, negative_prompt_attention_mask, negative_pooled_prompt_embeds = self.base_model.text_encoder(negative_prompt, device)
 
+            if self.do_classifier_free_guidance:
+                # Concatenate negative and positive prompt embeddings for classifier-free guidance
+                prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
+                pooled_prompt_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
+                prompt_attention_mask = torch.cat([negative_prompt_attention_mask, prompt_attention_mask], dim=0)
 
-        # Get negative prompt embeddings (always needed)
-        negative_prompt_embeds, negative_prompt_attention_mask, negative_pooled_prompt_embeds = self.text_encoder(negative_prompt, device)
 
 
         # --- Initialization for ToF Search ---
@@ -861,6 +871,434 @@ class VideoT1Generator:
                         branch_generator,
                         image_branching_factors, # Using image branching factors at intermediate depths
                     )
+
+                    history_latent_list.append(intermediate_latents[-1]) # Append generated latent to history
+                    combined_latents = torch.cat(history_latent_list, dim=2) # Combine history and current latents
+                    latent_dict[current_encoding] = intermediate_latents[-1] # Store the final latent of the new unit
+
+                    if current_depth in reward_stages:
+                        # Decode and save intermediate video for reward judging stages
+                        images = self.base_model.decode_latent(
+                            combined_latents,
+                            save_memory=save_memory,
+                            inference_multigpu=inference_multigpu
+                        )
+                        filename = f"path_{current_encoding}.mp4" 
+                        video_path = os.path.join(video_dir, filename) 
+                        export_to_video(images, video_path, fps=24) 
+                        #print(f"Video saved at {os.path.join(video_dir, filename)}") 
+
+                        reward_encodings.append(current_encoding) # Add encoding to reward evaluation list
+
+                    if not current_depth in reward_stages:
+                        encoding_queue.put(current_encoding) # Add new encoding to queue for further branching
+
+
+            torch.cuda.empty_cache() # Clear CUDA cache after each loop iteration
+
+
+        # --- Best Video Selection ---
+        best_video = best_of_N(
+            video_dir=video_dir,
+            result_dir=self.result_path,
+            prompt=initial_prompt,
+            model=model,
+            tokenizer=tokenizer,
+            device=self.vr_device,
+            video_name=video_name
+        ) # Select the best video from generated paths
+
+        print(f"Best video is {best_video}") # Log the best video path
+
+
+        # --- CPU Offloading Cleanup ---
+        if cpu_offloading:
+            if not self.sequential_offload_enabled:
+                self.dit.to("cpu") # Move DIT back to CPU if not sequential offload
+            torch.cuda.empty_cache() # Final CUDA cache clear
+
+        return best_video # Return path to the best video
+    
+    @torch.no_grad()
+    def videot1_gen_wo_imgcot(
+        self,
+        prompt: Union[str, List[str]] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        num_frames: int = 16, # Renamed 'temp' to 'num_frames' for clarity
+        num_inference_steps: Optional[Union[int, List[int]]] = 28,
+        video_num_inference_steps: Optional[Union[int, List[int]]] = 28,
+        guidance_scale: float = 7.0,
+        video_guidance_scale: float = 7.0,
+        min_guidance_scale: float = 2.0,
+        use_linear_guidance: bool = False,
+        alpha: float = 0.5,
+        negative_prompt: Optional[Union[str, List[str]]] = "cartoon style, worst quality, low quality, blurry, absolute black, absolute white, low res, extra limbs, extra digits, misplaced objects, mutated anatomy, monochrome, horror",
+        generator: Optional[Union[torch.Generator, List[torch.Generator]]] = None,
+        save_memory: bool = True,
+        cpu_offloading: bool = False,
+        inference_multigpu: bool = False,
+        video_branching_factors: List[int] = None, 
+        #image_branching_factors: List[int] = None, 
+        model = None, # Reward model
+        tokenizer = None, # Reward model tokenizer
+        reward_stages: List[int] = None,
+        use_hierarchical_prompts = True,
+        result_path = None,
+        intermediate_path = None, 
+        video_name=None,
+        
+    ):
+        """
+        Tree-of-Frames Video Generation with tree-based exploration.
+
+        This function Implements the ToF Search.
+        It starts with an initial prompt and iteratively refines the video content
+        by branching and selecting promising paths based on a reward mechanism
+        at specified stages.
+
+        """
+        # Save initial prompt for best-of-N evaluation later
+        initial_prompt = copy.deepcopy(prompt)
+
+        # --- Output Path Configuration ---
+        if result_path:
+            self.result_path = result_path
+        os.makedirs(self.result_path, exist_ok=True) 
+
+        if intermediate_path:
+            self.image_path = os.path.join(intermediate_path, "images")
+            self.video_path = os.path.join(intermediate_path, "videos")
+        os.makedirs(self.image_path, exist_ok=True) 
+        os.makedirs(self.video_path, exist_ok=True) 
+
+
+        # --- CPU Offloading Configuration ---
+        if self.sequential_offload_enabled and not cpu_offloading:
+            print("Warning: overriding cpu_offloading set to False, as it's required for sequential CPU offload.")
+            cpu_offloading = True # Enforce cpu_offloading if sequential offload is enabled
+
+        device = self.device if not cpu_offloading else torch.device("cuda") # Determine device based on cpu_offloading
+
+        if cpu_offloading:
+            # Move DIT and VAE to CPU if CPU offloading is enabled (unless sequential offload is enabled)
+            if not self.sequential_offload_enabled:
+                if str(self.dit.device) != "cpu":
+                    print("(DIT) Warning: Do not preload pipeline components (i.e., to CUDA) with CPU offloading enabled! "
+                          "Otherwise, a redundant transfer will occur, increasing processing time.")
+                    self.dit.to("cpu")
+                    torch.cuda.empty_cache() # Clear CUDA cache after moving to CPU
+                if str(self.vae.device) != "cpu":
+                    print("(VAE) Warning: Do not preload pipeline components (i.e., to CUDA) with CPU offloading enabled! "
+                          "Otherwise, a redundant transfer will occur, increasing processing time.")
+                    self.vae.to("cpu")
+                    torch.cuda.empty_cache() # Clear CUDA cache after moving to CPU
+
+        # --- Input Validation ---
+        assert (num_frames - 1) % self.frame_per_unit == 0, "The total number of frames must be divisible by 'frame_per_unit'."
+        #if image_branching_factors is None or len(image_branching_factors) == 0:
+        #    raise ValueError("image_branching_factors must be provided and non-empty.")
+
+
+        # --- Output Video Directory Setup ---
+        current_time = datetime.datetime.now()
+        timestamp_dir = current_time.strftime("%Y%m%d_%H%M%S") # Create timestamp for directory naming
+        video_dir = os.path.join(self.video_path, timestamp_dir)
+        os.makedirs(video_dir, exist_ok=True) # Create video output directory with timestamp
+
+
+        # --- Hierarchical Prompt Preparation ---
+        if use_hierarchical_prompts:
+            prompt_list = hierarchical_prompts(prompt, self.lm_device, self.lm_path) # Split prompt into hierarchical prompts
+            print(f"Hierarchical prompts: {prompt_list}") # Log the hierarchical prompts
+            judging_prompt = prompt_list[0] # Start with the first prompt in the hierarchy
+        else:
+            judging_prompt = prompt # Use the original prompt if not hierarchical
+
+        # Enhance prompt for quality
+        if isinstance(prompt, str):
+            generation_prompt = prompt + ", hyper quality, Ultra HD, 8K"
+        else:
+            assert isinstance(prompt, list)
+            generation_prompt = [_ + ", hyper quality, Ultra HD, 8K" for _ in prompt] # Enhance each prompt in the list
+
+
+        # --- Negative Prompt Processing ---
+        negative_prompt = negative_prompt or "" # Default to empty string if no negative prompt provided
+        if isinstance(negative_prompt, str):
+            negative_prompt = [negative_prompt] # Convert to list for consistent handling
+        else:
+            assert isinstance(negative_prompt, list), "Negative prompt must be a string or a list of strings."
+
+
+        # --- Linear Guidance Setup ---
+        if use_linear_guidance:
+            max_guidance_scale = guidance_scale
+            guidance_scale_list = [max(max_guidance_scale - alpha * t_, min_guidance_scale) for t_ in range(num_frames)]
+            #print(f"Linear guidance scale list: {guidance_scale_list}") # Log the guidance scale list
+        else:
+            guidance_scale_list = None # No linear guidance
+
+
+        # --- Guidance Scale Assignment ---
+        self._guidance_scale = guidance_scale # Store original guidance scale
+        self._video_guidance_scale = video_guidance_scale # Store original video guidance scale
+        self.base_model._guidance_scale = guidance_scale # Update base model guidance scale
+        self.base_model._video_guidance_scale = video_guidance_scale # Update base model video guidance scale
+
+
+        # --- Text Embeddings (Initial Prompt) ---
+        if not use_hierarchical_prompts:
+            # Get text embeddings for the initial prompt (if not using hierarchical prompts)
+            prompt_embeds, prompt_attention_mask, pooled_prompt_embeds = self.base_model.text_encoder(generation_prompt, device)
+            negative_prompt_embeds, negative_prompt_attention_mask, negative_pooled_prompt_embeds = self.base_model.text_encoder(negative_prompt, device)
+
+            if self.do_classifier_free_guidance:
+                # Concatenate negative and positive prompt embeddings for classifier-free guidance
+                prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
+                pooled_prompt_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
+                prompt_attention_mask = torch.cat([negative_prompt_attention_mask, prompt_attention_mask], dim=0)
+        else:
+            prompt_embeds, prompt_attention_mask, pooled_prompt_embeds = self.base_model.text_encoder(generation_prompt, device)
+            negative_prompt_embeds, negative_prompt_attention_mask, negative_pooled_prompt_embeds = self.base_model.text_encoder(negative_prompt, device)
+
+            if self.do_classifier_free_guidance:
+                # Concatenate negative and positive prompt embeddings for classifier-free guidance
+                prompt_embeds = torch.cat([negative_prompt_embeds, prompt_embeds], dim=0)
+                pooled_prompt_embeds = torch.cat([negative_pooled_prompt_embeds, pooled_prompt_embeds], dim=0)
+                prompt_attention_mask = torch.cat([negative_prompt_attention_mask, prompt_attention_mask], dim=0)
+
+
+
+        # --- Initialization for ToF Search ---
+        encoding_queue = SimpleQueue() # Queue to manage encodings for tree traversal (BFS)
+        latent_dict = {} # Dictionary to store latents at different encoding paths
+
+
+       
+        num_channels_latents = (self.dit.config.in_channels // 4) if self.model_name == "pyramid_flux" else self.dit.config.in_channels
+
+
+        # --- Seed and Generator Setup ---
+        base_generator = generator if generator is not None else torch.Generator(device=self.device) # Use provided generator or create a new one
+        base_seed = base_generator.initial_seed() if generator is not None else torch.randint(0, 2**63-1, (1,), device=self.device).item() # Get seed from generator or create a random seed
+        perm_size = 2**16 
+        nums = torch.randperm(perm_size, generator=base_generator, device=self.device) # Generate random permutation
+        seeds = ((nums[:video_branching_factors[0]].to(torch.int64) * 2**32) + base_seed) % (2**32 - 1) # Generate seeds for initial branches
+
+        # --- Noisy latents setting ---
+        noisy_latents = [] 
+        current_height = height 
+        current_width = width 
+
+        # --- Depth 0 Initialization (Initial Branches) ---
+        for i in range(video_branching_factors[0]): # Iterate through the initial branching factor
+
+            if use_hierarchical_prompts:
+                # Use the first prompt from the hierarchical list for initial generation (depth 0)
+                judging_prompt = prompt_list[0]
+
+            seed = int(seeds[i]) # Get seed for current branch
+            branch_generator = torch.Generator(device=self.device).manual_seed(seed) 
+            # print(f"Current Encoding: {i}, seed: {seed}") 
+
+            # Prepare initial noisy latents for this branch
+            noisy_latent, current_height, current_width = self.base_model.prepare_processed_latents(
+                1, 
+                num_channels_latents,
+                num_frames, # Total number of frames
+                height,
+                width,
+                prompt_embeds.dtype,
+                device,
+                branch_generator,
+            )
+            noisy_latent = noisy_latent.to(self.dtype) # Ensure noisy latent has correct dtype
+            noisy_latents.append(noisy_latent) # Store initial noisy latent
+            past_condition_latents = [[] for _ in range(len(self.stages))] # Initialize past condition latents
+
+            intermediate_latents = self.base_model.generate_one_unit(
+                noisy_latent[:,:,:1], # First frame of the noisy latent as input
+                past_condition_latents,
+                prompt_embeds,
+                prompt_attention_mask,
+                pooled_prompt_embeds,
+                num_inference_steps,
+                # video_num_inference_steps,
+                current_height,
+                current_width,
+                1, # Unit length of 1 frame for initial image
+                device,
+                self.dtype,
+                branch_generator,
+                True,
+            )
+
+            ## Generate initial frame unit for the current branch (Chain-of-Thought start)
+            #intermediate_latents = self.generate_one_unit_img_cot(
+            #    0, 
+            #    noisy_latent[:,:,:1], # First frame of the noisy latent as input
+            #    past_condition_latents,
+            #    generation_prompt,
+            #    prompt_embeds,
+            #    prompt_attention_mask,
+            #    pooled_prompt_embeds,
+            #    num_inference_steps,
+            #    video_num_inference_steps,
+            #    current_height,
+            #    current_width,
+            #    1, # Unit length of 1 frame for initial image
+            #    device,
+            #    self.dtype,
+            #    branch_generator,
+            #    image_branching_factors, # Using image branching factors at depth 0
+            #)
+
+            latent_dict[str(i)] = intermediate_latents[-1] # Store the final latent of the initial frame
+            encoding_queue.put(str(i)) # Add initial encoding (depth 0) to the queue
+
+
+        # --- Reward and Exploration Loop ---
+        reward_encodings = [] # List to store encodings to be evaluated by reward model
+        reward_operate = False # Flag to indicate if reward judging is pending
+        prompt_change = True # Flag to track if prompt needs to be changed in hierarchical prompting
+
+        # Main loop for tree-based video generation and exploration
+        while not (encoding_queue.empty() and not reward_operate): # Continue until queue is empty and no reward operation pending
+
+            # --- Reward Judging Operation ---
+            if reward_operate and encoding_queue.empty():
+                accepted_encodings = judging(
+                    video_dir, reward_encodings, judging_prompt, model,
+                    tokenizer, self.vr_device, reward_stages
+                ) # Perform reward judging on generated video paths
+
+                reward_operate = False # Reset reward operation flag
+                reward_encodings.clear() # Clear reward encodings list
+                for encoding in accepted_encodings:
+                    encoding_queue.put(encoding) # Add accepted encodings back to the queue for further exploration
+
+            # --- Process Encoding from Queue ---
+            current_encoding_prefix = encoding_queue.get() # Get the next encoding prefix from the queue
+            current_depth = len(current_encoding_prefix) # Determine current depth in the tree
+
+            # --- Hierarchical Prompt Update ---
+            if use_hierarchical_prompts and prompt_change:
+                if current_depth < num_frames - 2:
+                    prompt_change = False # Prevent prompt change again in this iteration
+                    judging_prompt = prompt_list[1] # Use the second prompt for intermediate depths
+                else:
+                    prompt_change = False # Prevent prompt change again in this iteration
+                    judging_prompt = prompt_list[2] # Use the third prompt for final depths
+
+
+            # --- Depth Check and Branching/Final Video Generation ---
+            if current_depth >= len(video_branching_factors):
+                
+                history_latent_list = [] 
+                for i in range(current_depth):
+                    partial_encoding = current_encoding_prefix[:i+1] 
+                    if partial_encoding in latent_dict:
+                        history_latent_list.append(latent_dict[partial_encoding]) 
+
+                # Decode the combined latents to images
+                images = self.base_model.decode_latent(
+                    torch.cat(history_latent_list, dim=2), # Concatenate latents along frame dimension
+                    save_memory=save_memory,
+                    inference_multigpu=inference_multigpu
+                )
+                video_path = os.path.join(video_dir, f"final_{current_encoding_prefix}.mp4") # Define video save path
+                export_to_video(images, video_path, fps=24) # Export frames to video
+
+            else:
+                # --- Intermediate Depth: Check Reward Stage and Branch ---
+                if current_depth in reward_stages:
+                    reward_operate = True # Set flag for reward operation at reward stages
+
+                # --- Generate New Branches ---
+                perm_size = 2**16 # Permutation size for seed generation
+                nums = torch.randperm(perm_size, generator=base_generator, device=self.device) # Generate random permutation
+                seeds = ((nums[:video_branching_factors[current_depth]].to(torch.int64) * 2**32) + base_seed) % (2**32 - 1) # Generate seeds for new branches
+
+                for i in range(video_branching_factors[current_depth]): # Iterate through the branching factor at current depth
+                    history_latent_list = [] # List to store latents for history
+                    for j in range(current_depth):
+                        partial_encoding = current_encoding_prefix[:j+1] # Get partial encoding
+                        if partial_encoding in latent_dict:
+                            history_latent_list.append(latent_dict[partial_encoding]) # Retrieve history latents
+
+                    current_encoding = current_encoding_prefix + str(i) # Create new encoding by extending prefix
+                    print(f"Current Encoding: {current_encoding}, seed: {int(seeds[i])}") # Debug log - current encoding and seed
+                    branch_generator = torch.Generator(device=self.device).manual_seed(int(seeds[i])) # Create generator for new branch
+
+                    past_condition_latents = []
+                    # Get pyramid latents from history
+                    clean_latents_list = self.base_model.get_pyramid_latent(
+                        torch.cat(history_latent_list, dim=2), 
+                        len(self.stages) - 1 
+                    )
+
+                    for i_s in range(len(self.stages)):
+                        last_cond_latent = clean_latents_list[i_s][:,:,-(self.frame_per_unit):]
+
+                        stage_input = [torch.cat([last_cond_latent] * 2) if self.do_classifier_free_guidance else last_cond_latent]
+                
+                        # pad the past clean latents
+                        cur_unit_num = current_depth
+                        cur_stage = i_s
+                        cur_unit_ptx = 1
+
+                        while cur_unit_ptx < cur_unit_num:
+                            cur_stage = max(cur_stage - 1, 0)
+                            if cur_stage == 0:
+                                break
+                            cur_unit_ptx += 1
+                            cond_latents = clean_latents_list[cur_stage][:, :, -(cur_unit_ptx * self.frame_per_unit) : -((cur_unit_ptx - 1) * self.frame_per_unit)]
+                            stage_input.append(torch.cat([cond_latents] * 2) if self.do_classifier_free_guidance else cond_latents)
+
+                        if cur_stage == 0 and cur_unit_ptx < cur_unit_num:
+                            cond_latents = clean_latents_list[0][:, :, :-(cur_unit_ptx * self.frame_per_unit)]
+                            stage_input.append(torch.cat([cond_latents] * 2) if self.do_classifier_free_guidance else cond_latents)
+                    
+                        stage_input = list(reversed(stage_input))
+                        past_condition_latents.append(stage_input)
+
+
+                    # Intermediate latents
+                    intermediate_latents = self.base_model.generate_one_unit(
+                        noisy_latents[int(current_encoding_prefix[:1])][:, :, 1 + (current_depth - 1) * self.frame_per_unit:1 + current_depth * self.frame_per_unit],
+                        past_condition_latents,
+                        prompt_embeds,
+                        prompt_attention_mask,
+                        pooled_prompt_embeds,
+                        video_num_inference_steps,
+                        current_height,
+                        current_width,
+                        self.frame_per_unit,
+                        device,
+                        self.dtype,
+                        generator,
+                        False,
+                    )
+
+                    # Generate a new unit (frame_per_unit frames) for the current branch
+                    #intermediate_latents = self.generate_one_unit_img_cot(
+                    #    current_depth, 
+                    #    noisy_latents[int(current_encoding_prefix[:1])][:, :, 1 + (current_depth - 1) * self.frame_per_unit:1 + current_depth * self.frame_per_unit], # Noisy latent for current unit
+                    #    clean_latents_list, 
+                    #    generation_prompt,
+                    #    prompt_embeds,
+                    #    prompt_attention_mask,
+                    #    pooled_prompt_embeds,
+                    #    video_num_inference_steps,
+                    #    current_height,
+                    #    current_width,
+                    #    1, 
+                    #    device,
+                    #    self.dtype,
+                    #    branch_generator,
+                    #    image_branching_factors, # Using image branching factors at intermediate depths
+                    #)
 
                     history_latent_list.append(intermediate_latents[-1]) # Append generated latent to history
                     combined_latents = torch.cat(history_latent_list, dim=2) # Combine history and current latents
