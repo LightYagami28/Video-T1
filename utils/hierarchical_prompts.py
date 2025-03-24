@@ -37,13 +37,17 @@ Now process this input:"""
         result = tokenizer.decode(outputs[0], skip_special_tokens=True)
 
         # Extract result list
-        # print(result)
         start_idx = result.rfind("[")
         end_idx = result.rfind("]") + 1
-        prompt_list = eval(result[start_idx:end_idx])
-        
-        # Check conditions
-        if start_idx < end_idx and prompt_list[0] != "A girl standing behind a chair with her sister sitting on it in a living room, realistic lightin":
-            break
+        if start_idx == -1 or end_idx == -1 or start_idx >= end_idx:
+            continue
+        try:
+            prompt_list = eval(result[start_idx:end_idx])
+            # Validate the list
+            if (isinstance(prompt_list, list) and len(prompt_list) == 3 and all(isinstance(item, str) for item in prompt_list) and prompt_list[0] != "A girl standing behind a chair with her sister sitting on it in a living room, realistic lighting"):
+                return prompt_list
+        except Exception:
+            # If eval fails due to syntax errors, retry
+            pass
 
     return eval(result[start_idx:end_idx])
