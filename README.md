@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✨Video-T1: Test-time Scaling for Video Generation✨
+# ✨Video-T1: Test-Time Scaling for Video Generation✨
 
 <p align="center">
     <a href="https://liuff19.github.io/">Fangfu Liu</a><sup>1*</sup>,
@@ -13,7 +13,7 @@
     <sup>*</sup>Equal Contribution.
     <br>
     <sup>1</sup>Tsinghua University,
-    <sup>2</sup>Tencent AI Lab,
+    <sup>2</sup>Tencent,
 </p>
 
 <a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/arXiv-2403.14613-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;
