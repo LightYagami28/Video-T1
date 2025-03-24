@@ -17,7 +17,7 @@
 </p>
 
 <a href='https://arxiv.org/abs/'><img src='https://img.shields.io/badge/arXiv-2403.14613-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;
-<a href='[https://github.com/liuff19/Video-T1](https://liuff19.github.io/Video-T1/)'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp;&nbsp;
+<a href='https://liuff19.github.io/Video-T1/'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp;&nbsp;
 
 ![Teaser Visualization](assets/teaser.png)
 
@@ -84,7 +84,7 @@ You need to download the following models:
 ```bash
 cd VideoT1
 # Modify videot1.py to assign checkpoints correctly.
-python -m videot1.py --prompt "A corgi is playing drum kit." --video_name corgi
+python -m videot1.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name corgi
 ```
 
 ### 2.Inference Code
@@ -145,7 +145,7 @@ Example: Load **Reward Model** in GPU0, **Pyramid-Flow** in GPU1 and **Image-CoT
 
 ```bash
 # Load Models in different GPUs
-python videot1_multigpu.py --prompt "A futuristic cityscape at sunset" --video_name cityscape_video --reward_device_id 0 --base_device_id 1 --imgcot_device_id 2
+python videot1_multigpu.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name cityscape_video --reward_device_id 0 --base_device_id 1 --imgcot_device_id 2
 ```
 
 Please refer to videot1_multigpu.py for multi-GPU inference.
