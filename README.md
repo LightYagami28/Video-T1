@@ -57,7 +57,7 @@ searching process; (c) the last stage assesses the overall quality of the video 
 
 
 
-## Installation
+## 🔧 Installation
 
 ### Dependencies:
 
@@ -77,7 +77,7 @@ You need to download the following models:
  - (Optional)**Image-CoT-Generation** model checkpoint (for ImageCoT)
  - (Optional) **DeepSeek-R1-Distill-Llama-8B (Or other LLMs)** model checkpoint (for hierarchical prompts)
 
-## Inference
+## 💻 Inference
 
 ### 1. Quick start
 
