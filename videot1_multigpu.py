@@ -38,14 +38,14 @@ def parse_args():
     # --- Essential Arguments ---
     parser.add_argument(
         "--prompt",
-        default="A movie trailer featuring the adventures of the 30 year old space man wearing a red wool knitted motorcycle helmet, blue sky, salt desert, cinematic style, shot on 35mm film, vivid colors",
+        default="A cat wearing sunglasses and working as a lifeguard at a pool.",
         type=str,
         help="Text prompt for video generation. "
              "This prompt guides the content of the generated video."
     )
     parser.add_argument(
         "--video_name",
-        default="old_space_man",
+        default=None,
         type=str,
         help="Name of the video file (without extension) for saving the generated video."
     )
@@ -54,7 +54,7 @@ def parse_args():
     parser.add_argument(
         "--img_branch",
         type=str,
-        default="5,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1",
+        default="5,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1",
         help="Comma-separated number of image branches at each level of the model. "
              "Example: '5,1,2'. Defines the image generation structure."
     )
@@ -244,6 +244,8 @@ def main():
     prompt = args.prompt
     result_path = args.result_path
     video_name = args.video_name
+    if not video_name:
+        video_name = prompt.replace(' ', '_')
     intermed_path = args.intermed_path
 
     # --- PF Setup ---
