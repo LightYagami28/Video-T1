@@ -178,7 +178,7 @@ We are thankful for the following great works when implementing Video-T1 and Yix
 [OpenSora](https://github.com/hpcaitech/Open-Sora)  
 
 
-## Citation
+## 📚 Citation
 ```bibtex
 @article{
 
