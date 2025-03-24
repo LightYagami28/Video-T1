@@ -84,7 +84,7 @@ You need to download the following models:
 ```bash
 cd VideoT1
 # Modify videot1.py to assign checkpoints correctly.
-python -m videot1.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name corgi
+python -m videot1.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name cat_lifeguard
 ```
 
 ### 2.Inference Code
