@@ -62,7 +62,7 @@ searching process; (c) the last stage assesses the overall quality of the video 
 ### Dependencies:
 
 ```
-git clone [REPO_URL]
+git clone https://github.com/liuff19/Video-T1.git
 cd VideoT1
 conda create -n videot1 python==3.10
 conda activate videot1
