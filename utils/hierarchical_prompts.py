@@ -1,4 +1,5 @@
 import torch
+import json
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
 
@@ -41,8 +42,9 @@ Now process this input:"""
         end_idx = result.rfind("]") + 1
         if start_idx == -1 or end_idx == -1 or start_idx >= end_idx:
             continue
+        list_str = result[start_idx:end_idx]
         try:
-            prompt_list = eval(result[start_idx:end_idx])
+            prompt_list = json.loads(list_str)
             # Validate the list
             if (isinstance(prompt_list, list) and len(prompt_list) == 3 and all(isinstance(item, str) for item in prompt_list) and prompt_list[0] != "A girl standing behind a chair with her sister sitting on it in a living room, realistic lighting"):
                 return prompt_list
