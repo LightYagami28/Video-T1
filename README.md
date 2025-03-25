@@ -181,7 +181,13 @@ We are thankful for the following great works when implementing Video-T1 and Yix
 
 ## 📚 Citation
 ```bibtex
-@article{
-
-}
+@misc{liu2025videot1testtimescalingvideo,
+        title={Video-T1: Test-Time Scaling for Video Generation}, 
+        author={Fangfu Liu and Hanyang Wang and Yimo Cai and Kaiyan Zhang and Xiaohang Zhan and Yueqi Duan},
+        year={2025},
+        eprint={2503.18942},
+        archivePrefix={arXiv},
+        primaryClass={cs.CV},
+        url={https://arxiv.org/abs/2503.18942}, 
+  }
 ```
