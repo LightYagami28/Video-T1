@@ -7,13 +7,12 @@
     <a href="https://hanyang-21.github.io/">Hanyang Wang</a><sup>1*</sup>,
     <a href="https://github.com/JamesCai23">Yimo Cai</a><sup>1</sup>,
     <a href="https://iseesaw.github.io/">Kaiyan Zhang</a><sup>1</sup>,
-    <a href="https://xiaohangzhan.github.io/">Xiaohang Zhan</a><sup>2</sup>,
+    <a href="https://xiaohangzhan.github.io/">Xiaohang Zhan</a><sup></sup>,
     <a href="https://duanyueqi.github.io/">Yueqi Duan</a><sup>1</sup>,
     <br>
     <sup>*</sup>Equal Contribution.
     <br>
-    <sup>1</sup>Tsinghua University,
-    <sup>2</sup>Tencent,
+    <sup>1</sup>Tsinghua University
 </p>
 
 <a href='https://arxiv.org/abs/2503.18942'><img src='https://img.shields.io/badge/arXiv-2503.18942-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;
