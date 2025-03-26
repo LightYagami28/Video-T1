@@ -5,7 +5,7 @@
 <p align="center">
     <a href="https://liuff19.github.io/">Fangfu Liu</a><sup>1*</sup>,
     <a href="https://hanyang-21.github.io/">Hanyang Wang</a><sup>1*</sup>,
-    <a href="">Yimo Cai</a><sup>1</sup>,
+    <a href="https://github.com/JamesCai23">Yimo Cai</a><sup>1</sup>,
     <a href="https://iseesaw.github.io/">Kaiyan Zhang</a><sup>1</sup>,
     <a href="https://xiaohangzhan.github.io/">Xiaohang Zhan</a><sup>2</sup>,
     <a href="https://duanyueqi.github.io/">Yueqi Duan</a><sup>1</sup>,
