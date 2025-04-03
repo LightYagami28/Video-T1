@@ -1,6 +1,6 @@
 <div align="center">
 
-# ✨Video-T1: Test-Time Scaling for Video Generation✨
+# ✨ **Video-T1: Test-Time Scaling for Video Generation** ✨
 
 <p align="center">
     <a href="https://liuff19.github.io/">Fangfu Liu</a><sup>1*</sup>,
@@ -15,53 +15,38 @@
     <sup>1</sup>Tsinghua University
 </p>
 
-<a href='https://arxiv.org/abs/2503.18942'><img src='https://img.shields.io/badge/arXiv-2503.18942-b31b1b.svg'></a> &nbsp;&nbsp;&nbsp;&nbsp;
-<a href='https://liuff19.github.io/Video-T1/'><img src='https://img.shields.io/badge/Project-Page-Green'></a> &nbsp;&nbsp;&nbsp;&nbsp;
-<a><img src='https://img.shields.io/badge/License-MIT-blue'></a> &nbsp;&nbsp;&nbsp;&nbsp;
-<a href='https://mp.weixin.qq.com/s/HtJHXGgTAhi-uBWSsgqOKQ'><img src='https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1-%E4%B8%AD%E6%96%87%E4%BB%8B%E7%BB%8D-green'></a> &nbsp;&nbsp;&nbsp;&nbsp;
+[![arXiv](https://img.shields.io/badge/arXiv-2503.18942-b31b1b.svg)](https://arxiv.org/abs/2503.18942) &nbsp;&nbsp;&nbsp;&nbsp;
+[![Project Page](https://img.shields.io/badge/Project-Page-Green)](https://liuff19.github.io/Video-T1/) &nbsp;&nbsp;&nbsp;&nbsp;
+[![License](https://img.shields.io/badge/License-MIT-blue)](LICENSE) &nbsp;&nbsp;&nbsp;&nbsp;
+[![WeChat](https://img.shields.io/badge/%E5%BE%AE%E4%BF%A1-%E4%B8%AD%E6%96%87%E4%BB%8B%E7%BB%8D-green)](https://mp.weixin.qq.com/s/HtJHXGgTAhi-uBWSsgqOKQ)
+<br>
 ![Teaser Visualization](assets/teaser.png)
 
 </div>
 
-Video-T1: We present the generative effects and performance improvements of video generation under test-time scaling (TTS)
-settings. The videos generated with TTS are of higher quality and more consistent with the prompt than those generated without TTS.
+## 📢 **News**
+- **2025.3.24**: 🎉 We proudly present *Video-T1: Test-Time Scaling for Video Generation*!
 
-</div>
-
-## 📢 News
-
-- `2025.3.24` 🤗🤗🤗 We release *Video-T1: Test-time Scaling for Video Generation*
-
-## 🎉 Results
-
+## 🎯 **Key Results**
 ![Results Visualization](assets/results-teaser.png)
 
-</div>
+Test-Time Scaling (TTS) demonstrates significant improvements in the quality and consistency of generated videos. As the search space expands with increased computation, model performance shows consistent enhancement.
 
-Results of Test-Time Scaling for Video Generation. As the number of samples in the search space increases by scaling test-time
-computation (TTS), the models’ performance exhibits consistent improvement.
-
-
-## 🌟 Pipeline
-
+## 🔄 **Pipeline Overview**
 ![Pipeline Visualization](assets/pipeline.png)
 
-</div>
+### TTS Video Generation Workflow:
+- **Random Linear Search**: This approach samples Gaussian noise, generating a sequence of video clips through denoising. The highest-scoring output is selected based on test verifiers.
+- **Tree of Frames (ToF) Search**: This multi-stage process includes:
+  1. **Image-Level Alignment**: Impacts the subsequent frames.
+  2. **Dynamic Prompt Application**: Focuses on motion stability and physical plausibility for guiding the search.
+  3. **Final Video Assessment**: Evaluates overall quality and selects the best match to the text prompt.
 
-Pipeline of Test-Time Scaling for Video Generation. Top: Random Linear Search for TTS video generation is to randomly
-sample Gaussian noises, prompt the video generator to generate a sequence of video clips through step-by-step denoising in a linear manner,
-and select the highest score from the test verifiers. Bottom: Tree of Frames (ToF) Search for TTS video generation is to divide the video
-generation process into three stages: (a) the first stage performs image-level alignment that influences the later frames; (b) the second stage
-is to apply dynamic prompt in test verifiers V to focus on motion stability, physical plausibility to provide feedback that guides heuristic
-searching process; (c) the last stage assesses the overall quality of the video and select the video with highest alignment with text prompts.
+## 🛠️ **Installation**
 
+### **Prerequisites**:
 
-
-## 🔧 Installation
-
-### Dependencies:
-
-```
+```bash
 git clone https://github.com/liuff19/Video-T1.git
 cd VideoT1
 conda create -n videot1 python==3.10
@@ -70,26 +55,24 @@ pip install -r requirements.txt
 git clone https://github.com/LLaVA-VL/LLaVA-NeXT && cd LLaVA-NeXT && pip install --no-deps -e ".[train]"
 ```
 
-### Model Checkpoints:
-You need to download the following models:
- - **Pyramid-Flow** model checkpoint (for video generation)
- - **VisionReward-Video** model checkpoint (for video reward guidance)
- - (Optional) **Image-CoT-Generation** model checkpoint (for ImageCoT)
- - (Optional) **DeepSeek-R1-Distill-Llama-8B (Or other LLMs)** model checkpoint (for hierarchical prompts)
+### **Model Checkpoints**:
+Ensure the following models are downloaded:
+- **Pyramid-Flow** (for video generation)
+- **VisionReward-Video** (for video reward guidance)
+- **Optional**: **Image-CoT-Generation** (for ImageCoT)
+- **Optional**: **DeepSeek-R1-Distill-Llama-8B** (or other LLMs) for hierarchical prompts
 
-## 💻 Inference
+## 💻 **Inference**
 
-### 1. Quick start
+### 1. **Quick Start**:
 
 ```bash
 cd VideoT1
-# Modify videot1.py to assign checkpoints correctly.
+# Modify videot1.py to correctly assign checkpoints.
 python -m videot1.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name cat_lifeguard
 ```
 
-### 2.Inference Code
-
-For inference, please refer to **videot1.py** for usage.
+### 2. **Detailed Inference Code**:
 
 ```python
 # Import Pipeline and Base Model
@@ -112,17 +95,16 @@ generator = VideoT1Generator(
     lm_path=lm_path,
 )
 
-# Courtesy of Pyramid-Flow
-# Use the generator to generate videos using TTS strategy
+# Generate Video using TTS Strategy
 best_video = generator.videot1_gen(
     prompt=prompt,
-    num_inference_steps=[20, 20, 20],      # Inference steps for image branch at each level
-    video_num_inference_steps=[20, 20, 20], # Inference steps for video branch at each level
+    num_inference_steps=[20, 20, 20],
+    video_num_inference_steps=[20, 20, 20],
     height=height,
     width=width,
     num_frames=temp,
     guidance_scale=7.0,           
-    video_guidance_scale=5.0,      
+    video_guidance_scale=5.0,     
     save_memory=True,             
     inference_multigpu=True,      
     video_branching_factors=video_branch,
@@ -134,51 +116,38 @@ best_video = generator.videot1_gen(
     video_name=video_name,
     **reward_params                
 )
-
 ```
 
-### 3.Multi-GPU Inference
-
-Save GPU Memory by loading different models on different GPUs to avoid OOM problem. 
-
-Example: Load **Reward Model** in GPU0, **Pyramid-Flow** in GPU1 and **Image-CoT** model in GPU2
+### 3. **Multi-GPU Inference**:
+To prevent out-of-memory (OOM) errors, load different models on separate GPUs.
 
 ```bash
-# Load Models in different GPUs
+# Load models onto different GPUs
 python videot1_multigpu.py --prompt "A cat wearing sunglasses and working as a lifeguard at a pool." --video_name cat_lifeguard --reward_device_id 0 --base_device_id 1 --imgcot_device_id 2 --lm_device_id 3
 ```
 
-Please refer to videot1_multigpu.py for multi-GPU inference.
+Refer to `videot1_multigpu.py` for multi-GPU configuration details.
 
-### 4.Usage Tips
+### 4. **Inference Tips**:
+1. **reward_stages**: Select three indices to prune the reward model. Deeper tree structures use more video clips for evaluation.
+2. **variant**: For optimal quality, we recommend 768p. Choose between 384p and 768p (same as Pyramid-Flow).
+3. **img_branch**: List of integers defining the number of images at each depth in the ImageCoT process.
+4. **video_branch**: List of integers defining the number of generated frames at each depth. If `img_branch = [A]` and `video_branch = [B]`, at depth `i`, the branch will have `A[i] * B[i]` initial images and `B[i]` next latent frames.
 
-1. **reward_stages**: Choose three indices for reward model pruning. If tree's depth is in three indices, all video clips would be fed into reward models for judging.
+## 🚀 **Future Updates**
+We plan to release a **Dataset for Test-Time Scaling** in the **CogVideoX-5B**.
 
-2. **variant**: We recommend 768p for better quality, choose from 384,768 (same as Pyramid-Flow)
+## 🙏 **Acknowledgements**
+We gratefully acknowledge the following projects and contributors:
+- [Pyramid-Flow](https://github.com/jy0205/Pyramid-Flow)
+- [NOVA](https://github.com/baaivision/NOVA)
+- [VisionReward](https://github.com/THUDM/VisionReward)
+- [VideoLLaMA3](https://github.com/DAMO-NLP-SG/VideoLLaMA3)
+- [CogVideoX](https://github.com/THUDM/CogVideo)
+- [OpenSora](https://github.com/hpcaitech/Open-Sora)
+- [Image-Generation-CoT](https://github.com/ZiyuGuo99/Image-Generation-CoT)
 
-3. **img_branch**: A list of integers, each correspond to the number of images at the beginning of ImageCoT process at this depth.
-
-4. **video_branch**: A list of integers, each correspond to the number of generated next frames at this depth.  
-*Namely, if img_branch is array* $A[]$, *video_branch is array* $B[]$, *then at depth* $i$, *we would have* $A[i] \times B[i]$ *initial images for each branch, and* $B[i]$ *next latent frames would be the children for each branch.*
-
-
-## 🚀 TODO
-
-We would release Dataset for Test-Time Scaling in CogVideoX-5B
-
-## Acknowledgement
-
-We are thankful for the following great works when implementing Video-T1 and Yixin's great figure design:
-
-[Pyramid-Flow](https://github.com/jy0205/Pyramid-Flow)  
-[NOVA](https://github.com/baaivision/NOVA)  
-[VisionReward](https://github.com/THUDM/VisionReward)  
-[VideoLLaMA3](https://github.com/DAMO-NLP-SG/VideoLLaMA3)  
-[CogVideoX](https://github.com/THUDM/CogVideo)  
-[OpenSora](https://github.com/hpcaitech/Open-Sora)  
-[Image-Generation-CoT](https://github.com/ZiyuGuo99/Image-Generation-CoT)
-
-## 📚 Citation
+## 📚 **Citation**
 ```bibtex
 @misc{liu2025videot1testtimescalingvideo,
         title={Video-T1: Test-Time Scaling for Video Generation}, 
@@ -189,4 +158,3 @@ We are thankful for the following great works when implementing Video-T1 and Yix
         primaryClass={cs.CV},
         url={https://arxiv.org/abs/2503.18942}, 
   }
-```
